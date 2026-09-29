@@ -1,0 +1,14 @@
+{
+  "name": "aetheria-world",
+  "version": "2.1.0",
+  "private": true,
+  "description": "AEtheria v2 — сетевой архив RPG-мира, CMS и менеджер кампаний",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "seed": "node seed.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "npm test"
+  }
+}

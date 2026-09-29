@@ -1,0 +1,16 @@
+services:
+  aetheria:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SESSION_SECRET: "change-this-in-production"
+      ADMIN_NICK: "admin@example.com"
+      ADMIN_PASSWORD: "change-me-now"
+    volumes:
+      - aetheria-data:/app/data
+    restart: unless-stopped
+volumes:
+  aetheria-data:

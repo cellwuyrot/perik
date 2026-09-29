@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#2d302d">
+  <meta name="description" content="Эфирия — архив мира, кампаний, персонажей и истории кастомной настольной RPG.">
+  <title>Эфирия — Архив мира</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232d302d'/%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23c8aa72' stroke-width='6'/%3E%3Cpath d='M50 18v64M18 50h64' stroke='%23c8aa72' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div id="app" class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand" data-route="/" role="link" tabindex="0">
+      <div class="brand-mark">Э</div>
+      <div><div class="brand-name">Эфирия</div><div class="brand-sub">АРХИВ МИРА</div></div>
+    </div>
+    <nav class="nav" id="mainNav">
+      <div class="nav-label">Архив</div>
+      <a href="/" data-route="/" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#home"></use></svg></span> Обзор</a>
+      <a href="/world" data-route="/world" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#world"></use></svg></span> Мир</a>
+      <a href="/map" data-route="/map" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#map"></use></svg></span> Карта</a>
+      <a href="/timeline" data-route="/timeline" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#clock"></use></svg></span> Хронология</a>
+      <a href="/network" data-route="/network" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#network"></use></svg></span> Сеть мира</a>
+      <div class="nav-label">Энциклопедия</div>
+      <a href="/encyclopedia/characters" data-route="/encyclopedia/characters" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#user"></use></svg></span> Персонажи</a>
+      <a href="/encyclopedia/factions" data-route="/encyclopedia/factions" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#faction"></use></svg></span> Фракции</a>
+      <a href="/encyclopedia/locations" data-route="/encyclopedia/locations" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#pin"></use></svg></span> Локации</a>
+      <a href="/encyclopedia/creatures" data-route="/encyclopedia/creatures" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#paw"></use></svg></span> Бестиарий</a>
+      <a href="/encyclopedia/items" data-route="/encyclopedia/items" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#gem"></use></svg></span> Предметы</a>
+      <div class="nav-label">Игра</div>
+      <a href="/campaigns" data-route="/campaigns" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#campaign"></use></svg></span> Кампании</a>
+      <a href="/characters" data-route="/characters" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#users"></use></svg></span> Листы персонажей</a>
+      <a href="/search" data-route="/search" class="nav-item"><span><svg class="ui-icon"><use href="/assets/icons.svg#search"></use></svg></span> Поиск</a>
+    </nav>
+    <div class="sidebar-bottom" id="sidebarUser"></div>
+  </aside>
+  <main class="main" id="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Открыть меню">☰</button>
+      <div class="breadcrumbs" id="breadcrumbs">AEtheria / Обзор</div>
+      <div class="topbar-actions">
+        <button class="icon-button" id="globalSearch" title="Поиск" aria-label="Поиск"><svg class="ui-icon"><use href="/assets/icons.svg#search"></use></svg></button>
+        <a class="small-pill" href="/login" id="authButton">Войти</a>
+      </div>
+    </header>
+    <section id="view" class="view"></section>
+  </main>
+</div>
+<div id="toast" class="toast" role="status"></div>
+<div id="modal" class="modal hidden" aria-hidden="true"></div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
