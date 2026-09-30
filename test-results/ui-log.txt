@@ -1,0 +1,22 @@
+
+> aetheria-world@2.2.0 test:ui
+> node test/ui.mjs
+
+PASS Guest: every requested section is present and reachable
+PASS Guest sheets are separate from the character catalog
+PASS Admin login immediately loads all entities without refresh
+PASS Admin returns from website and reload without re-login
+PASS Every requested section supports CMS creation and public detail
+PASS Units, characters and bestiary share combat fields; gold and XP persist
+PASS Items save AC, damage and Properties label
+PASS Document formatting, tables, safe paste and save/reopen
+PASS Unknown legacy fields survive edits; unsaved navigation is warned
+PASS Changing record type keeps unsaved text, common fields and map markers
+PASS Character sheets are independent and migrated sheet retains its ID
+PASS Image upload embeds the real file and survives reopening
+PASS Missing editor record is handled without a client crash
+PASS Mobile menu and editor fit 390 px viewport
+PASS Cyrillic entity URLs work after creation and browser reload
+PASS Logout immediately clears private client data and blocks CMS
+PASS Player registration creates only an owned sheet, not an encyclopedia duplicate
+UI tests: 17 passed; browser exceptions: 0

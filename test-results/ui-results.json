@@ -1,0 +1,23 @@
+{
+  "passed": 17,
+  "cases": [
+    "Guest: every requested section is present and reachable",
+    "Guest sheets are separate from the character catalog",
+    "Admin login immediately loads all entities without refresh",
+    "Admin returns from website and reload without re-login",
+    "Every requested section supports CMS creation and public detail",
+    "Units, characters and bestiary share combat fields; gold and XP persist",
+    "Items save AC, damage and Properties label",
+    "Document formatting, tables, safe paste and save/reopen",
+    "Unknown legacy fields survive edits; unsaved navigation is warned",
+    "Changing record type keeps unsaved text, common fields and map markers",
+    "Character sheets are independent and migrated sheet retains its ID",
+    "Image upload embeds the real file and survives reopening",
+    "Missing editor record is handled without a client crash",
+    "Mobile menu and editor fit 390 px viewport",
+    "Cyrillic entity URLs work after creation and browser reload",
+    "Logout immediately clears private client data and blocks CMS",
+    "Player registration creates only an owned sheet, not an encyclopedia duplicate"
+  ],
+  "errors": []
+}
