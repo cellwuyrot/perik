@@ -6,9 +6,10 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      SESSION_SECRET: "change-this-in-production"
-      ADMIN_NICK: "admin@example.com"
-      ADMIN_PASSWORD: "change-me-now"
+      SESSION_SECRET: "${SESSION_SECRET:?Set SESSION_SECRET to a random string of at least 32 characters}"
+      ADMIN_NICK: "${ADMIN_NICK:-admin@example.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Set a strong initial ADMIN_PASSWORD}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-true}"
     volumes:
       - aetheria-data:/app/data
     restart: unless-stopped

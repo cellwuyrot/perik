@@ -1,19 +1,26 @@
-# Production architecture
+# Развёртывание v2.2
 
-The bundled runtime intentionally remains dependency-free and uses an atomic JSON repository, which makes the archive start immediately after unpacking. The API boundary is stable and maps directly to the normalized PostgreSQL schema in `db/schema.sql`.
+## Один экземпляр приложения
 
-## Recommended deployment
+1. Сделайте резервную копию `data/` и `.env`.
+2. Задайте NODE_ENV=production, ADMIN_NICK, сильный ADMIN_PASSWORD при первом запуске и уникальный SESSION_SECRET (не менее 32 символов). Секрет можно получить командой `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
+3. Настройте Caddy/Nginx с HTTPS перед Node. COOKIE_SECURE=true. Сервер слушает порт 3000; закрывайте прямой доступ к этому порту от внешней сети.
+4. Запустите `npm start` или `docker compose up --build -d`. Compose требует пароль и секрет из окружения/`.env`, не содержит встроенных production-секретов.
+5. Для локальной проверки Docker по HTTP можно явно поставить COOKIE_SECURE=false. Не используйте это в публичном развёртывании.
+6. Смена SESSION_SECRET отзывает все сессии. Сброс пароля в панели отзывает сессии выбранного пользователя. Смена ADMIN_PASSWORD в env не меняет существующий аккаунт.
 
-- Node.js service behind Caddy/Nginx with TLS.
-- PostgreSQL 16 using `db/schema.sql`; S3-compatible object storage for media.
-- Repository adapter built with Drizzle ORM or Prisma; keep HTTP handlers unchanged.
-- Redis for distributed rate limits and session revocation when more than one app instance is used.
-- Daily database backups plus object-storage lifecycle rules.
+Runtime использует только JSON-файл, атомарную замену и последовательные API-транзакции одного процесса. Это портативная сборка для небольшого сайта, а не кластер. TLS, резервное копирование, production proxy и Docker здесь описаны, но не протестированы в реальном хостинге.
 
-## Implemented security baseline
+## Многопроцессный сайт (будущая миграция)
 
-HMAC HttpOnly sessions, SameSite=Strict, CSRF header verification, PBKDF2 password hashes, role authorization, request-size bounds, login throttling, file allowlist/size bounds, CSP, frame protection, referrer and permissions policy, append-only audit events and version snapshots.
+`db/schema.sql` — стартовая схема PostgreSQL, а не подключённая база. Потребуются repository-адаптер, перенос существующих строковых ID/связей, таблица серверных сессий, объектное хранилище файлов и распределённый rate limiting. Не указывайте DATABASE_URL с ожиданием, что JSON-runtime автоматически начнёт использовать PostgreSQL.
 
-## Release gates
+## Проверки перед публикацией
 
-Run `npm test`, syntax checks, keyboard-only smoke testing, 390 px and desktop visual inspection, contrast review, reverse-proxy header tests, restore-from-backup drill, load test, dependency audit for the selected PostgreSQL adapter, and an OWASP ZAP passive scan.
+- `npm run check`, браузерные тесты и проверка копии реальных данных;
+- восстановление из резервной копии;
+- HTTPS/cookie через ваш proxy;
+- права ролей, публичные/закрытые материалы;
+- нагрузка под вашим ожидаемым трафиком и аудит безопасности.
+
+Пароль демонстрационного администратора должен быть заменён. Не размещайте `.env`, `data/`, резервные копии и файлы отчётов в публичной статике.

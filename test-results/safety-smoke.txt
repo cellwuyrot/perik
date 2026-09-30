@@ -1,0 +1,4 @@
+PASS Seed refuses to overwrite existing DB; original bytes unchanged
+PASS Production refuses insecure session secret
+PASS Corrupt DB fails startup and is not overwritten
+Original bundled data: 19 entities, no test accounts/sessions

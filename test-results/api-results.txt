@@ -1,0 +1,33 @@
+
+> aetheria-world@2.2.0 check
+> node --check server.mjs && node --check public/app.js && node --check public/editor.js && npm test
+
+
+> aetheria-world@2.2.0 test
+> node --test test/*.test.mjs
+
+✔ SPA, hidden /enter and SEO deep link are served (223.863111ms)
+✔ public layer hides GM and player records (6.658245ms)
+✔ player registration creates account and owned character (48.822712ms)
+✔ admin-only gate rejects player (37.195384ms)
+✔ CSRF is required and admin CRUD creates versions and audit (50.963159ms)
+✔ admin can manage roles and reset password (112.888006ms)
+✔ media library accepts bounded image upload (42.235733ms)
+✔ frontend includes responsive rich editor and network UI (4.663853ms)
+✔ public responses strip GM secrets, hidden pins and hidden relations (43.734826ms)
+✔ all requested entity types and new fields round-trip; old owned characters migrate to sheets (87.6353ms)
+✔ session survives website navigation and server restart; logout revokes it and requires CSRF (169.680375ms)
+✔ role changes, disabling and password reset apply to existing sessions; last admin protected (98.937841ms)
+✔ parallel creates preserve every committed record (80.650077ms)
+✔ malformed cookie does not crash the API and private rows are admin-only (46.443044ms)
+✔ GM cannot edit, delete or restore ADMIN-private records, including by known ID (92.546598ms)
+✔ Cyrillic slugs resolve by API and SEO; migrated deep links redirect (47.051306ms)
+✔ search cannot match unrevealed GM secrets; restore refuses occupied slugs (64.682249ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1333.740005
