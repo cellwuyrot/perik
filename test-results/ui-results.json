@@ -1,5 +1,5 @@
 {
-  "passed": 17,
+  "passed": 23,
   "cases": [
     "Guest: every requested section is present and reachable",
     "Guest sheets are separate from the character catalog",
@@ -10,7 +10,13 @@
     "Items save AC, damage and Properties label",
     "Document formatting, tables, safe paste and save/reopen",
     "Unknown legacy fields survive edits; unsaved navigation is warned",
-    "Changing record type keeps unsaved text, common fields and map markers",
+    "Changing record type keeps unsaved text and common fields",
+    "Ashan navigation: renamed sections, no maps/story/search in sidebar",
+    "Combat schema, damage and readable abbreviated ability scores",
+    "Items: cost, armor and damage above description",
+    "Factions: goal becomes status and relationship tab works",
+    "Pasted text blends with page; no white document background",
+    "Showcase CMS: upload, reorder, daily card, save/reload and delete",
     "Character sheets are independent and migrated sheet retains its ID",
     "Image upload embeds the real file and survives reopening",
     "Missing editor record is handled without a client crash",

@@ -1,33 +1,42 @@
 
-> aetheria-world@2.2.0 check
-> node --check server.mjs && node --check public/app.js && node --check public/editor.js && npm test
+> ashan-arcanum@2.3.0 check
+> node --check server.mjs && node --check public/app.js && node --check public/editor.js && node --check public/site.js && npm test
 
 
-> aetheria-world@2.2.0 test
+> ashan-arcanum@2.3.0 test
 > node --test test/*.test.mjs
 
-✔ SPA, hidden /enter and SEO deep link are served (223.863111ms)
-✔ public layer hides GM and player records (6.658245ms)
-✔ player registration creates account and owned character (48.822712ms)
-✔ admin-only gate rejects player (37.195384ms)
-✔ CSRF is required and admin CRUD creates versions and audit (50.963159ms)
-✔ admin can manage roles and reset password (112.888006ms)
-✔ media library accepts bounded image upload (42.235733ms)
-✔ frontend includes responsive rich editor and network UI (4.663853ms)
-✔ public responses strip GM secrets, hidden pins and hidden relations (43.734826ms)
-✔ all requested entity types and new fields round-trip; old owned characters migrate to sheets (87.6353ms)
-✔ session survives website navigation and server restart; logout revokes it and requires CSRF (169.680375ms)
-✔ role changes, disabling and password reset apply to existing sessions; last admin protected (98.937841ms)
-✔ parallel creates preserve every committed record (80.650077ms)
-✔ malformed cookie does not crash the API and private rows are admin-only (46.443044ms)
-✔ GM cannot edit, delete or restore ADMIN-private records, including by known ID (92.546598ms)
-✔ Cyrillic slugs resolve by API and SEO; migrated deep links redirect (47.051306ms)
-✔ search cannot match unrevealed GM secrets; restore refuses occupied slugs (64.682249ms)
-ℹ tests 17
+✔ SPA, hidden /enter and SEO deep link are served (429.570027ms)
+✔ public layer hides GM and player records (6.150817ms)
+✔ player registration creates account and owned character (73.35348ms)
+✔ admin-only gate rejects player (38.417401ms)
+✔ CSRF is required and admin CRUD creates versions and audit (80.754986ms)
+✔ admin can manage roles and reset password (279.223027ms)
+✔ media library accepts bounded image upload (43.65187ms)
+✔ frontend includes responsive rich editor and network UI (5.212533ms)
+✔ public responses strip GM secrets, hidden pins and hidden relations (80.419921ms)
+✔ all requested entity types and new fields round-trip; old owned characters migrate to sheets (313.402828ms)
+✔ session survives website navigation and server restart; logout revokes it and requires CSRF (345.187877ms)
+✔ role changes, disabling and password reset apply to existing sessions; last admin protected (161.642994ms)
+✔ parallel creates preserve every committed record (102.844596ms)
+✔ malformed cookie does not crash the API and private rows are admin-only (66.918399ms)
+✔ GM cannot edit, delete or restore ADMIN-private records, including by known ID (115.671295ms)
+✔ Cyrillic slugs resolve by API and SEO; migrated deep links redirect (141.903325ms)
+✔ search cannot match unrevealed GM secrets; restore refuses occupied slugs (99.856673ms)
+✔ Showcase defaults are empty, public read allowed, guest write forbidden (8.252733ms)
+✔ Showcase admin save is CSRF-protected, persistent and audited (184.943229ms)
+✔ Showcase rejects unsafe images, invalid dates/time zones and excessive cards (53.506977ms)
+✔ Player cannot change showcase with valid CSRF; magic CRUD works (70.88098ms)
+✔ v2 database migration preserves character rank as title and backup (352.650367ms)
+✔ GM and EDITOR cannot change global showcase (173.2563ms)
+✔ Showcase and administrator session survive server restart (301.812867ms)
+✔ Daily cards use one shared calendar and loop after all cards (17.209119ms)
+✔ No cards, one card, leap day and configured timezone (0.655334ms)
+ℹ tests 26
 ℹ suites 0
-ℹ pass 17
+ℹ pass 26
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1333.740005
+ℹ duration_ms 3716.086665

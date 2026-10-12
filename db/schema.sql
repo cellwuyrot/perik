@@ -1,4 +1,4 @@
--- AEtheria v2 production PostgreSQL schema (PostgreSQL 16+)
+-- Ashan Arcanum v2 production PostgreSQL schema (PostgreSQL 16+)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TYPE app_role AS ENUM ('ADMIN','GM','EDITOR','PLAYER');
 CREATE TYPE visibility AS ENUM ('PUBLIC','PLAYER','GM','PRIVATE');
