@@ -13,6 +13,10 @@ const safeStyle = (style) => {
     if (index < 0) continue;
     const key = part.slice(0, index).trim().toLowerCase(),
       val = part.slice(index + 1).trim();
+    // Strip default paper/ink colors from pasted documents; preserve deliberate accents.
+    const compact = val.toLowerCase().replace(/\s/g, "");
+    if (key === "background-color" && /^(white|#fff|#ffffff|#fffdf8|rgb\(255,255,255\)|rgba\(255,255,255,1\))$/.test(compact)) continue;
+    if (key === "color" && /^(black|#000|#000000|#292b28|rgb\(0,0,0\)|rgba\(0,0,0,1\))$/.test(compact)) continue;
     if (
       (key === "text-align" && /^(left|center|right|justify)$/.test(val)) ||
       (key === "font-weight" && /^(bold|normal|[1-9]00)$/.test(val)) ||
@@ -84,7 +88,7 @@ export function sanitizeRich(html) {
       if (/^[1-7]$/.test(attrs.size || "")) el.setAttribute("size", attrs.size);
       if (/^[a-zA-Z\s,'"-]{1,100}$/.test(attrs.face || ""))
         el.setAttribute("face", attrs.face);
-      if (/^(#[a-f0-9]{3,8}|[a-z]{1,20})$/i.test(attrs.color || ""))
+      if (/^(#[a-f0-9]{3,8}|[a-z]{1,20})$/i.test(attrs.color || "") && !/^(black|#000|#000000|#292b28)$/i.test(attrs.color || ""))
         el.setAttribute("color", attrs.color);
     }
   }
@@ -97,7 +101,7 @@ export function richToolbar() {
     <label>Шрифт<select data-command="fontName" aria-label="Шрифт"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Courier New">Courier New</option></select></label>
     <label>Размер<select data-command="fontSize" aria-label="Размер текста"><option value="2">10</option><option value="3" selected>12</option><option value="4">14</option><option value="5">18</option><option value="6">24</option><option value="7">36</option></select></label>
     <button type="button" data-cmd="bold" title="Полужирный (Ctrl+B)"><b>B</b></button><button type="button" data-cmd="italic" title="Курсив (Ctrl+I)"><i>I</i></button><button type="button" data-cmd="underline" title="Подчёркнутый (Ctrl+U)"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="Зачёркнутый"><s>S</s></button>
-    <label>Цвет<input type="color" data-command="foreColor" aria-label="Цвет текста" value="#292b28"></label><label>Выделение<input type="color" data-command="hiliteColor" aria-label="Цвет выделения" value="#fff2a8"></label>
+    <label>Цвет<input type="color" data-command="foreColor" aria-label="Цвет текста" value="#d9d1c2"></label><label>Выделение<input type="color" data-command="hiliteColor" aria-label="Цвет выделения" value="#fff2a8"></label>
     <button type="button" data-cmd="justifyLeft" title="По левому краю">Слева</button><button type="button" data-cmd="justifyCenter" title="По центру">Центр</button><button type="button" data-cmd="justifyRight" title="По правому краю">Справа</button><button type="button" data-cmd="justifyFull" title="По ширине">По ширине</button>
     <button type="button" data-cmd="insertUnorderedList">• Список</button><button type="button" data-cmd="insertOrderedList">1. Список</button><button type="button" data-cmd="outdent" title="Уменьшить отступ">− Отступ</button><button type="button" data-cmd="indent" title="Увеличить отступ">+ Отступ</button>
     <button type="button" id="insertLink">Ссылка</button><button type="button" data-cmd="unlink">Без ссылки</button><button type="button" id="insertTable">Таблица</button><button type="button" id="insertMention">@ Упоминание</button><button type="button" data-cmd="removeFormat">Сброс формата</button>

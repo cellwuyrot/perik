@@ -1,5 +1,5 @@
 
-> aetheria-world@2.2.0 test:ui
+> ashan-arcanum@2.3.0 test:ui
 > node test/ui.mjs
 
 PASS Guest: every requested section is present and reachable
@@ -11,7 +11,13 @@ PASS Units, characters and bestiary share combat fields; gold and XP persist
 PASS Items save AC, damage and Properties label
 PASS Document formatting, tables, safe paste and save/reopen
 PASS Unknown legacy fields survive edits; unsaved navigation is warned
-PASS Changing record type keeps unsaved text, common fields and map markers
+PASS Changing record type keeps unsaved text and common fields
+PASS Ashan navigation: renamed sections, no maps/story/search in sidebar
+PASS Combat schema, damage and readable abbreviated ability scores
+PASS Items: cost, armor and damage above description
+PASS Factions: goal becomes status and relationship tab works
+PASS Pasted text blends with page; no white document background
+PASS Showcase CMS: upload, reorder, daily card, save/reload and delete
 PASS Character sheets are independent and migrated sheet retains its ID
 PASS Image upload embeds the real file and survives reopening
 PASS Missing editor record is handled without a client crash
@@ -19,4 +25,4 @@ PASS Mobile menu and editor fit 390 px viewport
 PASS Cyrillic entity URLs work after creation and browser reload
 PASS Logout immediately clears private client data and blocks CMS
 PASS Player registration creates only an owned sheet, not an encyclopedia duplicate
-UI tests: 17 passed; browser exceptions: 0
+UI tests: 23 passed; browser exceptions: 0

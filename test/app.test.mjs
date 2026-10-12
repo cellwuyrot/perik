@@ -493,7 +493,7 @@ test("Cyrillic slugs resolve by API and SEO; migrated deep links redirect", asyn
       base + "/entity/articles/" + encodeURIComponent(c.data.entity.slug),
     )
   ).text();
-  assert.match(html, /Русский лор — Эфирия/);
+  assert.match(html, /Русский лор — Асхан/);
   const redirect = await fetch(base + "/entity/characters/lyra-starfall", {
     headers: h,
     redirect: "manual",
@@ -557,4 +557,87 @@ test("search cannot match unrevealed GM secrets; restore refuses occupied slugs"
     ).r.status,
     409,
   );
+});
+
+let showcaseSession;
+async function showcaseLogin() {
+  showcaseSession ||= await login();
+  assert.equal(showcaseSession.r.status,200);
+  return showcaseSession;
+}
+test('Showcase defaults are empty, public read allowed, guest write forbidden', async () => {
+  const {r,data} = await json('/api/site');
+  assert.equal(r.status,200);
+  assert.deepEqual(data.site.cards,[]);
+  assert.equal(data.site.description,'');
+  assert.equal((await json('/api/site',{method:'PUT',body:'{}'})).r.status,403);
+  assert.equal((await json('/api/site',{method:'DELETE'})).r.status,405);
+});
+test('Showcase admin save is CSRF-protected, persistent and audited', async () => {
+  const admin = await showcaseLogin();
+  const site = {eyebrow:'Асхан',title:'Приветствие',description:'Новый текст',overviewTitle:'История',overviewText:'Вводный текст',startDate:'2026-10-12',timeZone:'Europe/Moscow',cards:[{title:'Один',text:'Текст 1',image:'/assets/rune-texture.svg'},{title:'Два',text:'Текст 2',image:'/assets/stone-texture.svg'}]};
+  assert.equal((await json('/api/site',{method:'PUT',headers:{Cookie:admin.cookie},body:JSON.stringify(site)})).r.status,403);
+  const saved = await json('/api/site',{method:'PUT',headers:{Cookie:admin.cookie,'X-CSRF-Token':admin.csrf},body:JSON.stringify(site)});
+  assert.equal(saved.r.status,200);
+  assert.deepEqual(saved.data.site,site);
+  assert.deepEqual((await json('/api/site')).data.site,site);
+  const disk = JSON.parse(await fs.readFile(testDb,'utf8'));
+  assert.deepEqual(disk.site,site);
+  assert.equal(disk.audit[0].action,'site.update');
+});
+test('Showcase rejects unsafe images, invalid dates/time zones and excessive cards', async () => {
+  const admin = await showcaseLogin();
+  const site = (await json('/api/site')).data.site;
+  for (const invalid of [null, {...site,startDate:'2026-02-30'}, {...site,timeZone:'Not/AZone'}, {...site,timeZone:null}, {...site,cards:[{image:'javascript:alert(1)'}]}, {...site,cards:[{image:'//evil.example/img.png'}]}, {...site,cards:Array(61).fill(site.cards[0])}, {...site,cards:[null]}]) {
+    const {r} = await json('/api/site',{method:'PUT',headers:{Cookie:admin.cookie,'X-CSRF-Token':admin.csrf},body:JSON.stringify(invalid)});
+    assert.equal(r.status,400);
+  }
+  assert.deepEqual((await json('/api/site')).data.site,site);
+});
+test('Player cannot change showcase with valid CSRF; magic CRUD works', async () => {
+  const player = await json('/api/register',{method:'POST',body:JSON.stringify({nickname:'showcase_player',password:'showcase-password'})});
+  assert.equal((await json('/api/site',{method:'PUT',headers:{Cookie:cookie(player.r),'X-CSRF-Token':player.data.csrf},body:'{}'})).r.status,403);
+  const admin = await showcaseLogin();
+  const headers = {Cookie:admin.cookie,'X-CSRF-Token':admin.csrf};
+  const created = await json('/api/entities',{method:'POST',headers,body:JSON.stringify({type:'magic',name:'Пламя Асхана',fields:{school:'Огонь',cost:'3 маны',duration:'1 минута'}})});
+  assert.equal(created.r.status,201);
+  assert.equal(created.data.entity.type,'magic');
+  const changed = await json('/api/entities/'+created.data.entity.id,{method:'PUT',headers,body:JSON.stringify({fields:{school:'Огонь',cost:'4 маны'}})});
+  assert.equal(changed.data.entity.fields.cost,'4 маны');
+  assert.equal((await json('/api/entities/'+created.data.entity.id,{method:'DELETE',headers})).r.status,200);
+});
+test('v2 database migration preserves character rank as title and backup', async () => {
+  const port2=port+120, file=path.join(tempDir,'legacy.json');
+  await fs.writeFile(file,JSON.stringify({schemaVersion:2,entities:[{id:'legacy',type:'characters',name:'Лорд',fields:{rank:'Барон',category:'Legacy',abilities:'Legacy ability'}}],users:[]}));
+  const child=spawn(process.execPath,['server.mjs'],{env:{...process.env,PORT:String(port2),DB_FILE:file,SESSION_SECRET:'test-secret'},stdio:'ignore'});
+  try {
+    let data;
+    for(let i=0;i<50;i++) { try { data=await (await fetch(`http://127.0.0.1:${port2}/api/site`)).json(); break; } catch {} await new Promise(r=>setTimeout(r,100)); }
+    assert.ok(data.site);
+    const migrated=JSON.parse(await fs.readFile(file,'utf8'));
+    assert.equal(migrated.entities[0].fields.title,'Барон');
+    assert.equal(migrated.entities[0].fields.rank,'Барон');
+    assert.equal(migrated.schemaVersion,3);
+    assert.equal(JSON.parse(await fs.readFile(file+'.pre-2.3-backup','utf8')).schemaVersion,2);
+  } finally { child.kill(); }
+});
+
+test('GM and EDITOR cannot change global showcase',async()=>{
+  const admin=await showcaseLogin(), headers={Cookie:admin.cookie,'X-CSRF-Token':admin.csrf};
+  const player=await json('/api/login',{method:'POST',body:JSON.stringify({nickname:'showcase_player',password:'showcase-password'})});
+  for(const role of ['GM','EDITOR']) {
+    const changed=await json('/api/users/'+player.data.user.id,{method:'PUT',headers,body:JSON.stringify({role})});
+    assert.equal(changed.r.status,200);
+    assert.equal((await json('/api/site',{method:'PUT',headers:{Cookie:cookie(player.r),'X-CSRF-Token':player.data.csrf},body:'{}'})).r.status,403);
+  }
+});
+test('Showcase and administrator session survive server restart',async()=>{
+  const site=(await json('/api/site')).data.site;
+  const admin=await showcaseLogin();
+  const exited=new Promise(resolve=>proc.once('exit',resolve));
+  proc.kill(); await exited;
+  proc=spawn(process.execPath,['server.mjs'],{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_FILE:testDb,SESSION_SECRET:'test-secret',ADMIN_PASSWORD:'change-me-now'},stdio:'ignore'});
+  await wait();
+  assert.deepEqual((await json('/api/site')).data.site,site);
+  assert.equal((await json('/api/me',{headers:{Cookie:admin.cookie}})).data.user.role,'ADMIN');
 });

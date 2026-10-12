@@ -32,6 +32,7 @@ const TYPES = new Set([
   "creatures",
   "items",
   "articles",
+  "magic",
   "events",
   "quests",
   "campaigns",
@@ -96,6 +97,24 @@ function verifyPassword(password, encoded) {
     .toString("hex");
   return safeEq(got, want);
 }
+function defaultSite() {
+  return { eyebrow:"", title:"", description:"", overviewTitle:"", overviewText:"", cards:[], startDate:"2026-10-12", timeZone:"Europe/Moscow" };
+}
+function normalizeSite(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw Object.assign(new Error("Настройки должны быть объектом"), { status:400 });
+  const site = {};
+  for (const key of ["eyebrow","title","description","overviewTitle","overviewText"]) site[key] = cleanText(input[key], key === "overviewText" ? 15000 : key === "description" ? 2000 : 180);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.startDate || "") || !Number.isFinite(Date.parse(input.startDate + "T00:00:00Z")) || new Date(input.startDate + "T00:00:00Z").toISOString().slice(0,10) !== input.startDate) throw Object.assign(new Error("Некорректная дата начала цикла"), { status:400 });
+  try { new Intl.DateTimeFormat("en-CA", { timeZone: input.timeZone }).format(); } catch { throw Object.assign(new Error("Некорректный часовой пояс"), { status:400 }); }
+  if (typeof input.timeZone !== "string" || !input.timeZone) throw Object.assign(new Error("Укажите часовой пояс"), { status:400 });
+  site.startDate = input.startDate; site.timeZone = input.timeZone;
+  if (!Array.isArray(input.cards) || input.cards.length > 60) throw Object.assign(new Error("Разрешено не более 60 карточек"), { status:400 });
+  site.cards = input.cards.map(card => {
+    if (!card || typeof card !== "object" || Array.isArray(card) || typeof card.image !== "string" || !/^(https?:\/\/|\/(?!\/))/i.test(card.image) || card.image.length > 1000) throw Object.assign(new Error("У каждой карточки должен быть безопасный URL изображения"), { status:400 });
+    return { title:cleanText(card.title,180), text:cleanText(card.text,2000), image:card.image };
+  });
+  return site;
+}
 async function readDb() {
   let db;
   try {
@@ -125,6 +144,13 @@ async function readDb() {
     }
     db.schemaVersion = 2;
   }
+  if (!db.schemaVersion || db.schemaVersion < 3) {
+    for (const e of [...db.entities, ...db.versions.map(v => v.data).filter(Boolean)]) {
+      if (e.type === "characters" && e.fields?.rank && !e.fields.title) e.fields.title = e.fields.rank;
+    }
+    db.schemaVersion = 3;
+  }
+  db.site ||= defaultSite();
   ensureAdmin(db);
   return db;
 }
@@ -460,6 +486,16 @@ async function api(req, res, url) {
   const db = await readDb(),
     u = authenticated(req, db);
   req.authUser = u;
+  if (action === "site") {
+    if (req.method === "GET") return send(res, 200, { site: db.site });
+    if (req.method !== "PUT") return send(res, 405, { error:"Метод не поддерживается" });
+    const admin = requireRole(req, res, ["ADMIN"]);
+    if (!admin || !verifyCsrf(req,res,admin)) return;
+    db.site = normalizeSite(await jsonBody(req));
+    audit(db,admin,"site.update","showcase",{ cards:db.site.cards.length });
+    await writeDb(db);
+    return send(res,200,{ site:db.site });
+  }
   if (action === "register" && req.method === "POST") {
     const b = await jsonBody(req),
       nickname = cleanText(b.nickname, 32).trim().toLowerCase();
@@ -810,10 +846,10 @@ async function serve(req, res, url) {
         );
       if (e) {
         let html = d.toString();
-        const title = `${e.name} — Эфирия`,
-          desc = e.shortDescription || "Архив мира Эфирии";
+        const title = `${e.name} — Асхан`,
+          desc = e.shortDescription || "Архив мира Асхана";
         html = html.replace(
-          "<title>Эфирия — Архив мира</title>",
+          "<title>Асхан — Архив мира</title>",
           `<title>${title.replace(/[<>]/g, "")}</title><meta property="og:title" content="${title.replace(/["<>]/g, "")}"><meta property="og:description" content="${desc.replace(/["<>]/g, "")}"><meta property="og:type" content="article"><link rel="canonical" href="${url.origin}${url.pathname}">`,
         );
         d = Buffer.from(html);
@@ -854,11 +890,13 @@ const server = http.createServer(async (req, res) => {
 const initial = await readDb();
 try {
   const old = JSON.parse(await fs.readFile(DB_FILE, "utf8"));
-  if (!old.schemaVersion) await fs.copyFile(DB_FILE, DB_FILE + ".v2.1-backup");
+  if (!old.schemaVersion || old.schemaVersion < 3) {
+    try { await fs.copyFile(DB_FILE, DB_FILE + ".pre-2.3-backup", 1); } catch (error) { if (error.code !== "EEXIST") throw error; }
+  }
 } catch (e) {
   if (e.code !== "ENOENT") throw e;
 }
 await writeDb(initial);
 server.listen(PORT, () =>
-  console.log(`AEtheria v2.2 running at http://localhost:${PORT}`),
+  console.log(`Ashan Arcanum v2.3 running at http://localhost:${PORT}`),
 );

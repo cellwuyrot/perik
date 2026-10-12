@@ -26,6 +26,12 @@ async function ready() {
   }
   throw Error("server timeout");
 }
+async function restartServer() {
+  // Split test batches at a real restart rather than disabling production rate limits.
+  const exited = once(server, "exit"); server.kill(); await exited;
+  server = spawn(process.execPath, ["server.mjs"], { env: { ...process.env, DB_FILE: db, PORT: String(port), SESSION_SECRET: "ui-test-secret" }, stdio:"ignore" });
+  await ready();
+}
 async function goto(route) {
   await page.goto(base + route);
   await page.waitForFunction(
@@ -79,7 +85,7 @@ try {
         ["races", "Народы"],
         ["religions", "Религии"],
         ["events", "События"],
-        ["stories", "Ветки сюжета"],
+        ["magic", "Магия"],
         ["units", "Юниты"],
         ["quests", "Квесты"],
         ["sessions", "Сессии"],
@@ -139,7 +145,7 @@ try {
         "races",
         "religions",
         "events",
-        "stories",
+        "magic",
         "quests",
         "sessions",
       ]) {
@@ -204,8 +210,8 @@ try {
     });
     await goto(`/entity/items/${e.slug}`);
     const text = await page.locator("#view").innerText();
-    assert.match(text, /КД \(класс доспеха\)\s*18/);
-    assert.match(text, /Урон\s*1d8\+2/);
+    assert.match(text, /КД\s*18/);
+    assert.match(text, /Урон\s*1d8\+2/i);
     assert.match(text, /Свойства\s*Магическое/);
   });
   await check(
@@ -317,33 +323,119 @@ try {
       assert.equal(e.fields.customLegacy, "Keep me");
     },
   );
-  await check(
-    "Changing record type keeps unsaved text, common fields and map markers",
-    async () => {
-      await goto("/admin/entities/units/new");
-      await page.locator("[name=name]").fill("Type conversion");
-      await page.locator("[name=field_gold]").fill("40");
-      await page.locator("#richEditor").fill("Описание не теряется");
-      await page.locator("#editorType").selectOption("maps");
-      await page.locator("#addPin").click();
-      await page.locator(".pin-label").fill("Маркер");
-      await page.locator("#editorType").selectOption("characters");
-      assert.equal(await page.locator("[name=field_gold]").inputValue(), "40");
-      await page.locator("#editorType").selectOption("maps");
-      assert.equal(await page.locator(".pin-label").inputValue(), "Маркер");
-      await page.locator("#editorType").selectOption("units");
-      assert.equal(
-        await page.locator("[name=name]").inputValue(),
-        "Type conversion",
-      );
-      assert.equal(
-        await page.locator("#richEditor").innerText(),
-        "Описание не теряется",
-      );
-      await page.locator(".editor-actions button").click();
-      await page.waitForURL("**/admin/entities/units");
-    },
-  );
+  await check("Changing record type keeps unsaved text and common fields", async () => {
+    await goto("/admin/entities/units/new");
+    await page.locator("[name=name]").fill("Type conversion");
+    await page.locator("[name=field_gold]").fill("40");
+    await page.locator("#richEditor").fill("Описание не теряется");
+    await page.locator("#editorType").selectOption("magic");
+    await page.locator("[name=field_school]").fill("Огонь");
+    await page.locator("#editorType").selectOption("characters");
+    assert.equal(await page.locator("[name=field_gold]").inputValue(), "40");
+    await page.locator("#editorType").selectOption("magic");
+    assert.equal(await page.locator("[name=field_school]").inputValue(), "Огонь");
+    await page.locator("#editorType").selectOption("units");
+    assert.equal(await page.locator("#richEditor").innerText(), "Описание не теряется");
+    await page.locator(".editor-actions button").click();
+    await page.waitForURL("**/admin/entities/units");
+  });
+  await restartServer();
+  await check("Ashan navigation: renamed sections, no maps/story/search in sidebar", async () => {
+    await goto("/");
+    assert.equal(await page.locator('.brand-name').innerText(), 'Ashan Arcanum');
+    assert.equal(await page.locator('#mainNav a[href="/"]').innerText(), 'Витрина');
+    assert.equal(await page.locator('#mainNav a[href="/world"]').innerText(), 'Каталог');
+    assert.match(await page.locator('#mainNav a[href="/network"]').innerText(), /Паутина Асхи/);
+    for (const route of ['/map','/search','/encyclopedia/maps','/encyclopedia/stories']) assert.equal(await page.locator(`#mainNav a[href="${route}"]`).count(),0);
+    assert.equal(await page.locator('.hero-copy h1, .hero-copy p').count(),0);
+    await goto('/world');
+    assert.doesNotMatch(await page.locator('#view').innerText(), /Ветки сюжета|Карты/);
+    await goto('/admin/entities/maps');
+    assert.match(await page.locator('#view').innerText(), /Этот слой закрыт/);
+  });
+  await check("Combat schema, damage and readable abbreviated ability scores", async () => {
+    for (const type of ['characters','units','creatures']) {
+      await goto(`/admin/entities/${type}/new`);
+      for (const key of ['category','rank','abilities']) assert.equal(await page.locator(`[name=field_${key}]`).count(),0);
+      assert.equal(await page.locator('[name=field_title]').count(), type === 'characters' ? 1 : 0);
+      for (const label of ['Сила','Ловкость','Телосложение','Интеллект','Мудрость','Харизма']) assert.ok((await page.locator('.stats-editor').innerText()).includes(label));
+      const entity = await create(type, 'Damage '+type, {damage:'2d6 + 4', gold:15, experience:300, stats_STR:18});
+      await goto(`/entity/${type}/${entity.slug}`);
+      assert.match(await page.locator('.stat-ribbon').textContent(), /Урон[\s\S]*2d6 \+ 4/);
+      assert.equal((await page.locator('.ability-scores span').allTextContents()).join(''), 'СЛТИМХ');
+      assert.match(await page.locator('.ability-scores').innerText(), /18/);
+      assert.doesNotMatch(await page.locator('.detail-aside').innerText(), /Золото|Опыт|Урон|STR/);
+    }
+  });
+  await check("Items: cost, armor and damage above description", async () => {
+    const entity = await create('items','Предмет со стоимостью',{cost:'120 золотых',ac:17,damage:'1d8',rarity:'Редкий',weight:'2 кг'});
+    await goto(`/entity/items/${entity.slug}`);
+    assert.match(await page.locator('.stat-ribbon').textContent(), /120 золотых/);
+    assert.match(await page.locator('.stat-ribbon').textContent(), /1d8/);
+    assert.doesNotMatch(await page.locator('.detail-aside').innerText(), /Урон|Стоимость|КД/);
+  });
+  await check("Factions: goal becomes status and relationship tab works", async () => {
+    const entity = await create('factions','Отношения фракции',{goal:'Активна',relationships:'Союз с орденом'});
+    await goto(`/entity/factions/${entity.slug}`);
+    assert.match(await page.locator('.detail-aside').innerText(), /Статус[\s\S]*Активна/);
+    await page.locator('#relationshipsTab').click();
+    assert.equal(await page.locator('#factionRelationships').innerText(),'Союз с орденом');
+    assert.equal(await page.locator('#factionDescription').isVisible(), false);
+    await page.locator('#descriptionTab').click();
+    assert.equal(await page.locator('#factionDescription').isVisible(), true);
+  });
+  await check("Pasted text blends with page; no white document background", async () => {
+    const entity = await create('articles','Контраст текста');
+    await page.evaluate(async id => {
+      const me = await (await fetch('/api/me')).json();
+      await fetch('/api/entities/'+id,{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':me.csrf},body:JSON.stringify({content:'<p style="background-color: white; color: black">Текст без белой подложки</p>'})});
+    },entity.id);
+    await goto(`/entity/articles/${entity.slug}`);
+    const style = await page.locator('.prose p').evaluate(e => ({background:getComputedStyle(e).backgroundColor,color:getComputedStyle(e).color,parent:getComputedStyle(e.parentElement).color}));
+    assert.equal(style.background,'rgba(0, 0, 0, 0)'); assert.equal(style.color,style.parent);
+  });
+  await check("Showcase CMS: upload, reorder, daily card, save/reload and delete", async () => {
+    await goto('/admin');
+    await page.locator('a[href="/admin/site"]').click();
+    await page.locator('[name=title]').fill('Асхан приветствует');
+    await page.locator('#siteForm [name=description]').fill('Изменённое приветствие');
+    await page.locator('[name=overviewTitle]').fill('О мире');
+    await page.locator('[name=overviewText]').fill('Новый текст витрины');
+    await page.locator('[name=startDate]').fill(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow'}).format(new Date()));
+    for (const title of ['Первый витраж','Второй витраж']) {
+      await page.locator('#addSiteCard').click();
+      const card = page.locator('.site-card').last();
+      await card.locator('[data-card=title]').fill(title);
+      await card.locator('[data-card=text]').fill('Текст '+title);
+      await card.locator('.card-upload').setInputFiles({name:'stained.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aYo0AAAAASUVORK5CYII=','base64')});
+      await page.waitForFunction(() => [...document.querySelectorAll('[data-card=image]')].every(input => input.value.startsWith('/uploads/')));
+    }
+    await page.locator('.site-card').last().locator('[data-card-action=up]').click();
+    assert.equal(await page.locator('.site-card').first().locator('[data-card=title]').inputValue(),'Второй витраж');
+    await page.locator('#siteForm .editor-actions button').click();
+    await page.waitForFunction(() => document.getElementById('siteStatus')?.textContent === 'Витрина сохранена');
+    await goto('/');
+    assert.equal(await page.locator('.hero-copy h1').innerText(),'Второй витраж');
+    assert.match(await page.locator('#view').innerText(),/Новый текст витрины/);
+    assert.equal(await page.locator('.daily-hero-image').evaluate(img => img.complete && img.naturalWidth > 0),true);
+    await page.screenshot({path:'test-results/showcase-desktop.png',fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    for (const route of ['/', '/admin/site','/admin/entities/creatures/new']) {
+      await goto(route);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2),true, 'No overflow '+route);
+    }
+    await page.screenshot({path:'test-results/ashan-mobile.png',fullPage:true});
+    await page.setViewportSize({width:1440,height:1000});
+    await goto('/admin/site');
+    await page.reload(); await page.waitForSelector('.site-card');
+    assert.equal(await page.locator('.site-card').count(),2);
+    await page.locator('.site-card [data-card-action=delete]').first().click();
+    await page.locator('.site-card [data-card-action=delete]').first().click();
+    await page.locator('#siteForm .editor-actions button').click();
+    await page.waitForFunction(() => document.getElementById('siteStatus')?.textContent === 'Витрина сохранена');
+    await goto('/');
+    assert.equal(await page.locator('.hero-copy h1').innerText(),'Асхан приветствует');
+  });
   await check(
     "Character sheets are independent and migrated sheet retains its ID",
     async () => {
@@ -417,6 +509,7 @@ try {
       fullPage: true,
     });
   });
+  await restartServer();
   await check(
     "Cyrillic entity URLs work after creation and browser reload",
     async () => {

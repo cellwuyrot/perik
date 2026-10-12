@@ -42,9 +42,9 @@ const add = (...a) => e.push(entity(...a));
 add(
   "articles",
   "welcome",
-  "Эфирия — мир на краю Второго Рассвета",
+  "Асхан — мир на краю Второго Рассвета",
   "Фэнтезийная вселенная, в которой древняя магия возвращается вместе с забытыми долгами.",
-  "# Эфирия\n\nЭфирия — мир, где история оставила шрамы на земле. Империи исчезли, боги замолчали, а старые дороги всё ещё хранят ключи к событиям, которые должны были остаться мифом.\n\nЗдесь каждая история связана с другой: город помнит войну, предмет хранит имя владельца, а незаметный NPC может изменить судьбу целой кампании.",
+  "# Асхан\n\nАсхан — мир, где история оставила шрамы на земле. Империи исчезли, боги замолчали, а старые дороги всё ещё хранят ключи к событиям, которые должны были остаться мифом.\n\nЗдесь каждая история связана с другой: город помнит войну, предмет хранит имя владельца, а незаметный NPC может изменить судьбу целой кампании.",
   { tags: ["лор", "мир"], featured: true },
 );
 add(
@@ -320,7 +320,7 @@ add(
 add(
   "maps",
   "aetheria-world-map",
-  "Карта Эфирии",
+  "Карта Асхана",
   "Интерактивная карта мира с основными точками кампании.",
   "Ключевые локации кампании «Пепел королей».",
   {
@@ -373,7 +373,7 @@ rel("ash-of-kings", "map-below", "первый квест");
 rel("ash-of-kings", "second-dawn", "ключевое событие");
 rel("dawn-knight", "silver-dawn", "служит");
 await fs.writeFile(FILE, JSON.stringify({ entities: e }, null, 2));
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820"><defs><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#171411"/><stop offset="1" stop-color="#2a241b"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="18"/></filter></defs><rect width="1400" height="820" fill="url(#bg)"/><g opacity=".24" fill="#c59a5b" filter="url(#blur)"><path d="M80 170 C220 80,320 130,420 250 S650 300,720 190 S1010 90,1160 180 S1290 330,1180 390 S910 420,820 510 S560 640,410 560 S170 580,100 450Z"/></g><g fill="none" stroke="#cdb079" stroke-width="2" opacity=".5"><path d="M100 560 C250 500,310 520,460 610 S730 720,900 600 S1150 520,1310 640"/><path d="M140 250 C280 290,390 330,560 270 S850 150,1020 270 S1190 330,1300 250"/><path d="M310 90 C350 210,320 330,400 450 S520 620,640 720"/></g><g fill="#d8b46b" font-family="Georgia,serif"><text x="86" y="82" font-size="34" letter-spacing="6">ЭФИРИЯ</text><text x="102" y="706" font-size="20">Карта известных земель · 843 Эры Королей</text></g><g fill="#735735" opacity=".9"><path d="M220 160 l35 -70 32 70 -25 -16 -20 28z"/><path d="M570 170 l38 -85 42 85 -32 -21 -20 34z"/><path d="M890 420 l35 -82 40 82 -30 -20 -22 30z"/><path d="M1120 200 l35 -78 38 78 -29 -17 -19 30z"/></g></svg>`;
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820"><defs><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#171411"/><stop offset="1" stop-color="#2a241b"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="18"/></filter></defs><rect width="1400" height="820" fill="url(#bg)"/><g opacity=".24" fill="#c59a5b" filter="url(#blur)"><path d="M80 170 C220 80,320 130,420 250 S650 300,720 190 S1010 90,1160 180 S1290 330,1180 390 S910 420,820 510 S560 640,410 560 S170 580,100 450Z"/></g><g fill="none" stroke="#cdb079" stroke-width="2" opacity=".5"><path d="M100 560 C250 500,310 520,460 610 S730 720,900 600 S1150 520,1310 640"/><path d="M140 250 C280 290,390 330,560 270 S850 150,1020 270 S1190 330,1300 250"/><path d="M310 90 C350 210,320 330,400 450 S520 620,640 720"/></g><g fill="#d8b46b" font-family="Georgia,serif"><text x="86" y="82" font-size="34" letter-spacing="6">АСХАН</text><text x="102" y="706" font-size="20">Карта известных земель · 843 Эры Королей</text></g><g fill="#735735" opacity=".9"><path d="M220 160 l35 -70 32 70 -25 -16 -20 28z"/><path d="M570 170 l38 -85 42 85 -32 -21 -20 34z"/><path d="M890 420 l35 -82 40 82 -30 -20 -22 30z"/><path d="M1120 200 l35 -78 38 78 -29 -17 -19 30z"/></g></svg>`;
 await fs.writeFile(
   path.join(process.cwd(), "public/assets/world-map.svg"),
   svg,

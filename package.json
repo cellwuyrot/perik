@@ -1,15 +1,15 @@
 {
-  "name": "aetheria-world",
-  "version": "2.2.0",
+  "name": "ashan-arcanum",
+  "version": "2.3.0",
   "private": true,
-  "description": "AEtheria v2 — сетевой архив RPG-мира, CMS и менеджер кампаний",
+  "description": "Ashan Arcanum v2 — сетевой архив RPG-мира, CMS и менеджер кампаний",
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
     "dev": "node --env-file-if-exists=.env --watch server.mjs",
     "seed": "node seed.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js && node --check public/editor.js && npm test",
+    "check": "node --check server.mjs && node --check public/app.js && node --check public/editor.js && node --check public/site.js && npm test",
     "test:ui": "node test/ui.mjs"
   }
 }
